@@ -34,12 +34,17 @@ int main()
             if (dataEnt[i] == '\n')
                 (dataEnt[i] = '\0');
         }
-        for (int j = 1 ;; j++,dataEnt = NULL)
+        for (int j = 1;; j++, dataEnt = NULL)
         {
             token = __strtok_r(dataEnt, delim, &savepointer);
-            if(token == NULL) break;
-            printf("\n%d:%s",j,token);
+            if (token == NULL)
+            {
+                printf("\n");
+                printf("%c",promptchar);
+                break;
+            }
 
+            printf("\n%d:%s", j, token);
         }
     }
 
