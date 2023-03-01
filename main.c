@@ -14,8 +14,8 @@ int main()
     int end = 0;
     int pid;
     char *dataEnt = NULL;
-    char *token, *savepointer;
-    char *delim = {' ','\0'};
+    char *token, *savepointer, *str;
+    char delim[2] = {' ', '\0'};
     termpoint = stdin;
 
     if (termpoint == NULL)
@@ -33,20 +33,14 @@ int main()
         {
             if (dataEnt[i] == '\n')
                 (dataEnt[i] = '\0');
+            str[i] = dataEnt[i];
         }
-        // user will press enter at the end of the string
-        token = __strtok_r(dataEnt, delim, &savepointer);
-        pid = fork();
-        if (pid == 0)
+        for (int j = 1;; str = NULL)
         {
-            printf("%s", token);
-        }
-        else
-        {
-            while (token != NULL)
-            {
-                token = __strtok_r(NULL,delim, &savepointer);
-            }
+            token = __strtok_r(dataEnt, delim, &savepointer);
+            if(token == NULL) break;
+            printf("\n%d:%s",j,token);
+
         }
     }
 
