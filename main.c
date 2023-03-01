@@ -14,7 +14,7 @@ int main()
     int end = 0;
     int pid;
     char *dataEnt = NULL;
-    char *token, *savepointer, *str;
+    char *token, *savepointer;
     char delim[2] = {' ', '\0'};
     termpoint = stdin;
 
@@ -33,9 +33,8 @@ int main()
         {
             if (dataEnt[i] == '\n')
                 (dataEnt[i] = '\0');
-            str[i] = dataEnt[i];
         }
-        for (int j = 1;; str = NULL)
+        for (int j = 1 ;; j++,dataEnt = NULL)
         {
             token = __strtok_r(dataEnt, delim, &savepointer);
             if(token == NULL) break;
