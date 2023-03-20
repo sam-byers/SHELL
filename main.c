@@ -12,6 +12,7 @@ int main()
 {
     FILE *termpoint;
     char cwd[100 * sizeof(char)];
+    char *command[50];
     if (getcwd(cwd, sizeof(cwd)) != NULL)
     {
         printf("Current working dir: %s\n", cwd);
@@ -26,7 +27,6 @@ int main()
     char *dataEnt = NULL;
     char *token, *savepointer;
     char delim[2] = {' ', '\0'};
-    char * synthargv[100];
     termpoint = stdin;
 
     if (termpoint == NULL)
@@ -55,10 +55,24 @@ int main()
                 break;
             }
             printf("\n%d:%s", j, token);
-            strcpy(synthargv[j],token);
-            printf("\n %s",synthargv[j]);
+            command[j] = token;
+            command[j + 1] = NULL;
         }
-        execvp(cwd, synthargv);
+        if (fork() == 0)
+        {
+            int status = execvp(command[0], command);
+            if (status == -1)
+            {
+                printf("Terminated Incorrectly\n");
+                return 1;
+            }
+        }
+        else
+        {
+            // Old Parent process. The C program will come here
+            // if fork() returns non-zero value.
+        }
     }
+
     return 0;
 }
