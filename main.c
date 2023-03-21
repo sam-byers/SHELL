@@ -7,17 +7,18 @@
 #include <limits.h>
 #include <time.h>
 #include <signal.h>
+#include <fcntl.h>
 
 #define _GNU_SOURCE
 #define promptchar '#'
 
 void updatetime(time_t timedata, struct tm *info) // update the time and print the prompt
 {
-    char buffer[80];
-    time(&timedata);
-    info = localtime(&timedata);
-    strftime(buffer, 80, "%d/%m %H:%M", info);
-    printf("[%s]%c ", buffer, promptchar);
+    char buffer[80];                           // make an 80 character buffer (plenty big)
+    time(&timedata);                           // update the timedata
+    info = localtime(&timedata);               // and write data to the info struct in many formats with localtime (witchcraft)
+    strftime(buffer, 80, "%d/%m %H:%M", info); // Define the format that we want to print the timedata, write this to the buffer array
+    printf("[%s]%c ", buffer, promptchar);     // print the prompt for user input in the correct format with the prompt char
 }
 
 void signalhandle(int signum) // handle the signal, flush the input and output, return carrage
@@ -30,12 +31,13 @@ void signalhandle(int signum) // handle the signal, flush the input and output, 
 int main()
 {
     signal(SIGINT, signalhandle);
-    FILE *termpoint;    // initalise the terminal pointer
-    time_t timedata;    // initalise the timedata variable
-    struct tm *info;    // and the time info struct that will hold the timedata
-    char cwd[100];      // current working directory array, limited to 100 chars
-    int customstat = 0; // custom status int, if the command being executed is 'custom', do not execvp
-    int status;         // the status of the execvp command
+    FILE *termpoint;       // initalise the terminal pointer
+    char *filename = NULL; // If writing to a file, this will hold the filename
+    time_t timedata;       // initalise the timedata variable
+    struct tm *info;       // and the time info struct that will hold the timedata
+    char cwd[100];         // current working directory array, limited to 100 chars
+    int customstat = 0;    // custom status int, if the command being executed is 'custom', do not execvp
+    int status = 0, f;        // the status of the execvp command and the file pointer if we are writing to a file
     char *command[50];
     if (getcwd(cwd, sizeof(cwd)) != NULL)
     {
@@ -43,59 +45,70 @@ int main()
     }
     else
     {
-        perror("getcwd() error");
+        perror("getcwd() error"); // if there is an error with getcwd print an error
         exit(1);
     }
-    int end = 0;
-    int pid;
     char *dataEnt = NULL;
     char *token, *savepointer;   // the token pointer and the pointer that contains the rest of the input string
     char delim[2] = {' ', '\0'}; // the deliminator that is used when tokenising the input string
-    termpoint = stdin;
+    termpoint = stdin;           // Termpoint points to the standard input
 
-    if (termpoint == NULL)
+    if (termpoint == NULL) // If that did not work for whatever reason
     {
-        exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE); // Exit with EXIT_FAILIURE
     }
 
-    size_t len = 0;
-    ssize_t nread;
-    updatetime(timedata, info);
+    size_t len = 0;                                          // will contian the number of chars wrote
+    ssize_t nread;                                           // will contain the number of chars read
+    updatetime(timedata, info);                              // print the prompt for user input
     while (nread = getline(&dataEnt, &len, termpoint) != -1) // take user input into the dataEnt array
     {
-        customstat = 0;                           // customstat defaults to 0
-        for (int i = 0; i < strlen(dataEnt); i++) // change the newline to a null char
+        customstat = 0; // customstat defaults to 0
+        for (int i = 0; i < strlen(dataEnt); i++)
         {
-            if (dataEnt[i] == '\n')
+            if (dataEnt[i] == '\n') // change the newline to a null char
                 (dataEnt[i] = '\0');
         }
-        for (int j = 0;; j++, dataEnt = NULL)
+        for (int j = 0;; j++, dataEnt = NULL) // this will run forever, until a null token is read, each loop j++ and dataEnt = NULL
         {
-            token = __strtok_r(dataEnt, delim, &savepointer);
-
-            if (token == NULL) // when we hit the last token in the dataEnt pointer print a newline
-            {
-                printf("\n");
+            token = __strtok_r(dataEnt, delim, &savepointer); // tokenise the input, ie get new token
+            if (token == NULL)                                // when we hit the last token in the dataEnt pointer, break
                 break;
+            if (strcmp(token, ">") == 0) // If we have > and not >> in the token
+            {
+                filename = __strtok_r(dataEnt, delim, &savepointer); // get the filename from the next token
+                command[j] = NULL;                                   // set the command to NULL
+                break;                                               // break so it never gets to write to
             }
-            command[j] = token;    // put the token in place
-            command[j + 1] = NULL; // command must be terminated with a null pointer
+            else
+            {
+                command[j] = token;    // put the token in place
+                command[j + 1] = NULL; // always put a NULL token at the end of what was just saved
+            }
         }
-        if (command[0] != NULL)
+        if (filename != NULL) { // If we have a filename supplied
+            f = open(filename, O_WRONLY|O_CREAT|O_TRUNC|O_APPEND, 0666); //open the file to copy to
+            dup2(f, 1); //duplicate to the file specifed
+        }
+        if (command[0] != NULL) // if the command is not NULL
         {
             if (strcmp(command[0], "exit") == 0) // if the command is exit, exit
                 exit(0);
             if (strcmp(command[0], "cd") == 0) // if the command is CD
             {
-                customstat = 1;
-                if (command[1] != NULL)
+                customstat = 1;         // CD is a custom command that cannot be execvp'ed
+                if (command[1] != NULL) // If we have an arguemnt for the CD command
                 {
-                    chdir(command[1]);
+                    int DirError = chdir(command[1]); // Attempt to change the directory
+                    if (DirError == -1)               // If there is an error
+                    {
+                        perror("ERROR: "); // Print the error using perror (witchcraft)
+                    }
                 }
-                else
+                else // otherwise we dont have input arguments for CD
                 {
                     printf("\nNo argument given for directory!\nChanging directory to home\n");
-                    chdir(getenv("HOME"));
+                    chdir(getenv("HOME")); // So we set the directory to the HOME directory
                 }
             }
         }
@@ -123,6 +136,9 @@ int main()
             for (int i = 0; command[i] != NULL; i++)
                 command[i] = NULL;
             wait(NULL);                 // voodoo witchcraft, This blocks the parent process until a child process has completed
+            if (filename != NULL)       // if we have a filename
+                close(f);               // close the file
+            filename = NULL;            // reset the filename to NULL
             updatetime(timedata, info); // print the next prompt for user input
         }
     }
