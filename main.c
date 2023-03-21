@@ -64,8 +64,8 @@ int main()
     while (nread = getline(&dataEnt, &len, termpoint) != -1) // take user input into the dataEnt array
     {
         customstat = 0; // customstat defaults to 0
-        if (dataEnt[strlen(dataEnt)] == '\n') // change the newline to a null char
-            (dataEnt[strlen(dataEnt)] = '\0');
+        if (dataEnt[strlen(dataEnt) - 1] == '\n') // change the newline to a null char
+            (dataEnt[strlen(dataEnt) - 1] = '\0');
         
         for (int j = 0;; j++, dataEnt = NULL) // this will run forever, until a null token is read, each loop j++ and dataEnt = NULL
         {
