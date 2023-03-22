@@ -64,11 +64,9 @@ int main()
     while (nread = getline(&dataEnt, &len, termpoint) != -1) // take user input into the dataEnt array
     {
         customstat = 0; // customstat defaults to 0
-        for (int i = 0; i < strlen(dataEnt); i++)
-        {
-            if (dataEnt[i] == '\n') // change the newline to a null char
-                (dataEnt[i] = '\0');
-        }
+        if (dataEnt[strlen(dataEnt) - 1] == '\n') // change the newline to a null char
+            (dataEnt[strlen(dataEnt) - 1] = '\0');
+        
         for (int j = 0;; j++, dataEnt = NULL) // this will run forever, until a null token is read, each loop j++ and dataEnt = NULL
         {
             token = __strtok_r(dataEnt, delim, &savepointer); // tokenise the input, ie get new token
