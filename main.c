@@ -1,72 +1,46 @@
-#include <stdlib.h> /* for standard library functions*/
-#include <stdio.h>  /* for printf */
-#include <string.h> /* for strlen */
-#include <unistd.h> /*for read and write and pipe*/
-#include <sys/types.h> 
-#include <sys/wait.h>
-#include <limits.h>
-#include <time.h>
-#include <signal.h>
-#include <fcntl.h>
+#include "functions.h" //include the functions
 
-#define _GNU_SOURCE
-#define promptchar '#'
-
-void updatetime(time_t timedata, struct tm *info) // update the time and print the prompt
-{
-    char buffer[80];                           // make an 80 character buffer (plenty big)
-    time(&timedata);                           // update the timedata
-    info = localtime(&timedata);               // and write data to the info struct in many formats with localtime (witchcraft)
-    strftime(buffer, 80, "%d/%m %H:%M", info); // Define the format that we want to print the timedata, write this to the buffer array
-    printf("[%s]%c ", buffer, promptchar);     // print the prompt for user input in the correct format with the prompt char
-}
-
-void signalhandle(int signum) // handle the signal, flush the input and output, return carrage
-{
-    fflush(stdout);
-    fflush(stdin);
-    printf("\r");
-}
+#include <stdlib.h>    /* for standard library functions*/
+#include <stdio.h>     /* for printf */
+#include <string.h>    /* for strlen */
+#include <unistd.h>    /*for read and write and pipe*/
+#include <sys/types.h> /*For unix system data types*/
+#include <sys/wait.h>  /*for the wait command */
+#include <limits.h>    /*determines propreties of var types*/
+#include <time.h>      /*for printing the time in the terminal*/
+#include <signal.h>    /*for catching sigint*/
+#include <fcntl.h>     /*for writing the output to a file*/
 
 int main()
 {
+    FILE *termpoint; // initalise the terminal pointer
     signal(SIGINT, signalhandle);
-    FILE *termpoint;       // initalise the terminal pointer
-    char *filename = NULL; // If writing to a file, this will hold the filename
-    time_t timedata;       // initalise the timedata variable
-    struct tm *info;       // and the time info struct that will hold the timedata
-    char cwd[100];         // current working directory array, limited to 100 chars
-    int customstat = 0;    // custom status int, if the command being executed is 'custom', do not execvp
-    int status = 0, f;        // the status of the execvp command and the file pointer if we are writing to a file
+    char *filename = NULL;        // If writing to a file, this will hold the filename
+    int customstat = 0;           // custom status int, if the command being executed is 'custom', do not execvp
+    int status = 0, f, stdoutCPY; // the status of the execvp command and the file pointer if we are writing to a file
+                                  // stdoutCPY lets us revert to standard output in terminal after a filewrite
     char *command[50];
-    if (getcwd(cwd, sizeof(cwd)) != NULL)
-    {
-        printf("Current working dir: %s\n", cwd);
-    }
-    else
-    {
-        perror("getcwd() error"); // if there is an error with getcwd print an error
-        exit(1);
-    }
     char *dataEnt = NULL;
     char *token, *savepointer;   // the token pointer and the pointer that contains the rest of the input string
     char delim[2] = {' ', '\0'}; // the deliminator that is used when tokenising the input string
     termpoint = stdin;           // Termpoint points to the standard input
-
-    if (termpoint == NULL) // If that did not work for whatever reason
+    if (termpoint == NULL)       // If termpointer did not work for whatever reason
     {
         exit(EXIT_FAILURE); // Exit with EXIT_FAILIURE
     }
-
-    size_t len = 0;                                          // will contian the number of chars wrote
-    ssize_t nread;                                           // will contain the number of chars read
-    updatetime(timedata, info);                              // print the prompt for user input
-    while (nread = getline(&dataEnt, &len, termpoint) != -1) // take user input into the dataEnt array
+    getCWD();                                                  // Print the current working directory to the terminal
+    size_t len = 0;                                            // will contian the number of chars wrote
+    ssize_t nread;                                             // will contain the number of chars read
+bump:                                                          // Goto if we have a SIGINT
+    updatetime();                                              // print the prompt for user input
+    while ((nread = getline(&dataEnt, &len, termpoint) != -1)) // take user input into the dataEnt array
     {
-        customstat = 0; // customstat defaults to 0
+        if (skipcheck() == 1)
+            goto bump;                            // If SIGINT then bump
+        customstat = 0;                           // customstat defaults to 0
         if (dataEnt[strlen(dataEnt) - 1] == '\n') // change the newline to a null char
             (dataEnt[strlen(dataEnt) - 1] = '\0');
-        
+
         for (int j = 0;; j++, dataEnt = NULL) // this will run forever, until a null token is read, each loop j++ and dataEnt = NULL
         {
             token = __strtok_r(dataEnt, delim, &savepointer); // tokenise the input, ie get new token
@@ -84,9 +58,13 @@ int main()
                 command[j + 1] = NULL; // always put a NULL token at the end of what was just saved
             }
         }
-        if (filename != NULL) { // If we have a filename supplied
-            f = open(filename, O_WRONLY|O_CREAT|O_TRUNC|O_APPEND, 0666); //open the file to copy to
-            dup2(f, 1); //duplicate to the file specifed
+        if (filename != NULL)
+        {
+            // If we have a filename supplied
+            stdoutCPY = dup(1);                                                // Copy standard output to stdoutCPY
+            f = open(filename, O_WRONLY | O_CREAT | O_TRUNC | O_APPEND, 0666); // open the file to copy to
+            dup2(f, 1);                                                        // duplicate to the file specifed
+            close(f);                                                          // close the file
         }
         if (command[0] != NULL) // if the command is not NULL
         {
@@ -133,13 +111,15 @@ int main()
             // reset the command array to NULL so that pressing enter does not run the last command again
             for (int i = 0; command[i] != NULL; i++)
                 command[i] = NULL;
-            wait(NULL);                 // voodoo witchcraft, This blocks the parent process until a child process has completed
-            if (filename != NULL)       // if we have a filename
-                close(f);               // close the file
-            filename = NULL;            // reset the filename to NULL
-            updatetime(timedata, info); // print the next prompt for user input
+            wait(NULL); // voodoo witchcraft, This blocks the parent process until a child process has completed
+            if (filename != NULL)
+            {                       // if we have a filename
+                dup2(stdoutCPY, 1); // reset the stdout to the original
+                close(stdoutCPY);   // close the copy
+                filename = NULL;    // reset the filename to NULL
+            }
+            updatetime(); // print the next prompt for user input
         }
     }
-
     return 0;
 }
