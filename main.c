@@ -1,8 +1,8 @@
-#include <stdlib.h>
+#include <stdlib.h> /* for standard library functions*/
 #include <stdio.h>  /* for printf */
 #include <string.h> /* for strlen */
 #include <unistd.h> /*for read and write and pipe*/
-#include <sys/types.h>
+#include <sys/types.h> 
 #include <sys/wait.h>
 #include <limits.h>
 #include <time.h>
