@@ -1,4 +1,4 @@
-## UCD UNIX PROGRAMMING ASSIGNMENT 2 - UNIX SHELL ##
+## UCD UNIX PROGRAMMING ASSIGNMENT 2 - UNIX SHELL - Version 1.0 ##
 This is a simple shell that uses execvp to execute commands, with cd functionality.
 Use on a unix system in the terminal
 
@@ -11,4 +11,5 @@ where filename is the name of your desired destination file.
 *any command before or after CTRL + C will be ingnored*
 
 - Sam Byers - 2023
+- https://github.com/sam-byers/SHELL
 
