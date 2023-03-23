@@ -1,4 +1,4 @@
-## UCD UNIX PROGRAMMING ASSIGNMENT 2 - UNIX SHELL - Version 1.0##
+## UCD UNIX PROGRAMMING ASSIGNMENT 2 - UNIX SHELL - Version 1.0 ##
 This is a simple shell that uses execvp to execute commands, with cd functionality.
 Use on a unix system in the terminal
 
