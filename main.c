@@ -78,7 +78,8 @@ bump:                                                          // Goto if we hav
                     int DirError = chdir(command[1]); // Attempt to change the directory
                     if (DirError == -1)               // If there is an error
                     {
-                        perror("ERROR: "); // Print the error using perror (witchcraft)
+                        fprintf(stderr, "cd: %s: ", command[1]); //print to stderr
+                        perror(""); // Print the error using perror (witchcraft)
                     }
                 }
                 else // otherwise we dont have input arguments for CD
