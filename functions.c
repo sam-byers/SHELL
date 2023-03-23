@@ -1,14 +1,4 @@
 #include "functions.h"
-#include <stdlib.h> /* for standard library functions*/
-#include <stdio.h>  /* for printf */
-#include <string.h> /* for strlen */
-#include <unistd.h> /*for read and write and pipe*/
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <limits.h>
-#include <time.h>
-#include <signal.h>
-#include <fcntl.h>
 
 static int skipsignal = 0; // if this is 1, do not print the prompt, global variable
 static time_t timedata;    // initalise the timedata variable
