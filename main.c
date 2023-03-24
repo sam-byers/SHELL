@@ -12,8 +12,7 @@ To write to a file, just do
 $ (your command) > filename
 where filename is the name of your desired destination file.
 
-Doing CTRL + C will not exit the shell program, but you must press return to return to a new line
-
+Doing CTRL + C will not exit the shell program
 any command before or after CTRL + C will be ingnored
 
 
@@ -22,16 +21,16 @@ any command before or after CTRL + C will be ingnored
 - VERSION 1.0 - [23 - 3 - 23]
 -----------------------------------------------*/
 
-#include "functions.h" //include the functions
+#include "functions.h" //include the functions and the include path
 
 int main()
 {
     FILE *termpoint; // initalise the terminal pointer
     signal(SIGINT, signalhandle);
-    char *filename = NULL;        // If writing to a file, this will hold the filename
-    int customstat = 0;           // custom status int, if the command being executed is 'custom', do not execvp
-    int status = 0, f, stdoutCPY; // the status of the execvp command and the file pointer if we are writing to a file
-                                  // stdoutCPY lets us revert to standard output in terminal after a filewrite
+    char *filename = NULL; // If writing to a file, this will hold the filename
+    int customstat = 0;    // custom status int, if the command being executed is 'custom', do not execvp
+    int f, stdoutCPY;      // the file pointer if we are writing to a file
+                           // stdoutCPY lets us revert to standard output in terminal after a filewrite
     char *command[50];
     char *dataEnt = NULL;
     char *token, *savepointer;   // the token pointer and the pointer that contains the rest of the input string
@@ -44,12 +43,9 @@ int main()
     getCWD();                                                  // Print the current working directory to the terminal
     size_t len = 0;                                            // will contian the number of chars wrote
     ssize_t nread;                                             // will contain the number of chars read
-bump:                                                          // Goto if we have a SIGINT
     updatetime();                                              // print the prompt for user input
     while ((nread = getline(&dataEnt, &len, termpoint) != -1)) // take user input into the dataEnt array
     {
-        if (skipcheck() == 1)
-            goto bump;                            // If SIGINT then bump
         customstat = 0;                           // customstat defaults to 0
         if (dataEnt[strlen(dataEnt) - 1] == '\n') // change the newline to a null char
             (dataEnt[strlen(dataEnt) - 1] = '\0');
@@ -79,45 +75,16 @@ bump:                                                          // Goto if we hav
             dup2(f, 1);                                                        // duplicate to the file specifed
             close(f);                                                          // close the file
         }
-        if (command[0] != NULL) // if the command is not NULL
+        if (command[0] != NULL) // if the command is not NULL, this stops a strcmp with a null string (seg. fault)
         {
-            if (strcmp(command[0], "exit") == 0) // if the command is exit, exit
+            customstat = CustomFunction(command); // check if the command is custom, if it is, run the custom function
+            if (customstat == 2)                  // if the command was exit, exit
                 exit(0);
-            if (strcmp(command[0], "cd") == 0) // if the command is CD
-            {
-                customstat = 1;         // CD is a custom command that cannot be execvp'ed
-                if (command[1] != NULL) // If we have an arguemnt for the CD command
-                {
-                    int DirError = chdir(command[1]); // Attempt to change the directory
-                    if (DirError == -1)               // If there is an error
-                    {
-                        fprintf(stderr, "cd: %s: ", command[1]); //print to stderr
-                        perror(""); // Print the error using perror (witchcraft)
-                    }
-                }
-                else // otherwise we dont have input arguments for CD
-                {
-                    printf("\nNo argument given for directory!\nChanging directory to home\n");
-                    chdir(getenv("HOME")); // So we set the directory to the HOME directory
-                }
-            }
         }
         if (fork() == 0)
         {
             // If fork returns a zero value, child process
-
-            if (customstat == 0)
-                status = execvp(command[0], command); // exe the command, this will kill the child
-            else
-            {
-                status = 1; // status is 1 if the command is custom, assume succuess of command
-                return 0;   // kill the child
-            }
-            if (status == -1) // if command failed
-            {
-                printf("Invalid command: %s\n", command[0]); // print invalid command
-                return 1;                                    // kill the child
-            }
+            return ChildExe(command,customstat);
         }
         else
         {

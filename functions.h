@@ -10,7 +10,7 @@
 
 #ifndef TIME_T_DEFINED
 #define TIME_T_DEFINED
-typedef long time_t; //define time_t as long
+typedef long time_t; // define time_t as long
 #endif
 /*include the libs!*/
 #include <stdlib.h>    /* for standard library functions*/
@@ -30,12 +30,19 @@ typedef long time_t; //define time_t as long
 #define _GNU_SOURCE
 #define promptchar '#'
 
-int skipcheck(); // Checks if a skip needs to occur when a signal is encountered, returns 1 if yes
+int CustomFunction(char *command[]);
+// Process custom functions CD and exit
 
-void updatetime(); // update the time and print the prompt
+int ChildExe(char *command[], int customstat);
+// Execute the command in a child process, choose the return value in error and custom cases
 
-void signalhandle(int signum); // handle the signal, flush the input and output, print a new line, skipsignal high
+void updatetime();
+// update the time and print the prompt
 
-void getCWD(); // get the current working directory and print it to the terminal
+void signalhandle(int signum);
+// handle the signal, flush the input and output, print a new line, skipsignal high
 
-#endif //FUNCTIONS.H INCLUDED
+void getCWD();
+// get the current working directory and print it to the terminal
+
+#endif // FUNCTIONS.H INCLUDED

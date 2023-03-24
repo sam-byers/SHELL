@@ -12,7 +12,7 @@ To write to a file, just do
 $ (your command) > filename
 where filename is the name of your desired destination file.
 
-**Doing CTRL + C will not exit the shell program, but you must press return to return to a new line**
+**Doing CTRL + C will not exit the shell program**
 
 *any command before or after CTRL + C will be ingnored*
 
