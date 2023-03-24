@@ -17,10 +17,9 @@ Doing CTRL + C will not exit the shell program, but you must press return to ret
 any command before or after CTRL + C will be ingnored
 
 
-- © - Sam Byers - 2023 - 
+- © - Sam Byers - 2023 - sam.byers@ucdconnect.ie - 21315391
 - https://github.com/sam-byers/SHELL
-
-            VERSION 1.0 - [23 - 3 - 23]
+- VERSION 1.0 - [23 - 3 - 23]
 -----------------------------------------------*/
 
 #include "functions.h" //include the functions

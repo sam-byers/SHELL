@@ -1,3 +1,13 @@
+/*--------------------------------------------*/
+/*This header file contains all the included libs*/
+/*and the function prototypes for the functions */
+/*that are used in the main.c file             */
+/*
+- © - Sam Byers - 2023 - sam.byers@ucdconnect.ie - 21315391
+- https://github.com/sam-byers/SHELL
+- VERSION 1.0 - [23 - 3 - 23]                 */
+/*--------------------------------------------*/
+
 #ifndef TIME_T_DEFINED
 #define TIME_T_DEFINED
 typedef long time_t; //define time_t as long

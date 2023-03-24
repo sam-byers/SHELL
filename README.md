@@ -16,5 +16,6 @@ where filename is the name of your desired destination file.
 
 *any command before or after CTRL + C will be ingnored*
 
-- © - Sam Byers - 2023 - 
+- © - Sam Byers - 2023 - sam.byers@ucdconnect.ie - 21315391
 - https://github.com/sam-byers/SHELL
+- VERSION 1.0 - [23 - 3 - 23]

@@ -1,3 +1,12 @@
+/*--------------------------------------------*/
+/* This file contains all the functions that  */
+/* are used in the main.c file                */
+/*
+- © - Sam Byers - 2023 - sam.byers@ucdconnect.ie - 21315391
+- https://github.com/sam-byers/SHELL
+- VERSION 1.0 - [23 - 3 - 23]                 */
+/*--------------------------------------------*/
+
 #include "functions.h"
 
 static int skipsignal = 0; // if this is 1, do not print the prompt, global variable
